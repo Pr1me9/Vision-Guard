@@ -58,8 +58,10 @@ torch
 torchvision
 tqdm
 typing_extensions
-tzdata
 ultralytics
 ultralytics-thop
 urllib3
 Werkzeug
+
+streamlit
+opencv-python-headless
