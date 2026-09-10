@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Vehicle and Pedestrian Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    header {
+    background-color: #136a8f;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        color: #fff;
+        width: 100%;
+        padding: 1.5rem 0;
+        text-align: center;
+        position: fixed;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+header h1 {
+    color: rgb(247, 245, 253);
+}
+    main {
+        margin-top: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    h1 {
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 15px 0;
+        width: 100%;
+        max-width: 600px;
+    }
+
+    input[type="file"] {
+        margin-right: 10px;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #333;
+        font-size: 16px;
+        box-shadow: inset 2px 2px 6px #d9d9d9, inset -2px -2px 6px #ffffff;
+    }
+
+    input[type="submit"] {
+        background: linear-gradient(145deg, #00c6ff, #0072ff);
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 10px;
+        box-shadow: 0 5px 0 #0056b3;
+        transition: all 0.2s ease;
+    }
+
+    input[type="submit"]:hover {
+        background: linear-gradient(145deg, #0072ff, #00c6ff);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 114, 255, 0.3);
+    }
+
+    #camera-status {
+        margin: 20px 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    button {
+        background: linear-gradient(145deg, #00b09b, #96c93d);
+        color: #fff;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 10px;
+        margin-top: 10px;
+        box-shadow: 0 6px 0 #218838;
+        transition: all 0.2s ease;
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    button i {
+        margin-right: 8px;
+    }
+
+    #camera-feed {
+        border: 4px solid #00c6ff;
+        border-radius: 15px;
+        max-width: 90%;
+        height: auto;
+        margin-top: 25px;
+        box-shadow: 0 15px 40px rgba(0, 198, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    #camera-feed:hover {
+        transform: scale(1.01);
+        box-shadow: 0 20px 60px rgba(0, 198, 255, 0.4);
+    }
+
+    .stats {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        max-width: 700px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .stats div {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        width: 30%;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .stats div:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .stats div span {
+        display: block;
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 10px;
+        color: #00c6ff;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    footer {
+        margin-top: 30px;
+        padding: 15px;
+        text-align: center;
+        background-color: #1e3c72;
+        color: #fff;
+        width: 100%;
+        box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3);
+    }
+</style>
+    <script>
+        function toggleCamera() {
+            fetch('/toggle_camera', { method: 'POST' })
+                .then(response => response.text())
+                .then(message => {
+                    document.getElementById('camera-status').innerText = message;
+                    document.getElementById('camera-feed').src = message.includes('on') ? '/video_feed' : '';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function fetchStats() {
+            fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-detections').innerText = data.total_detections;
+                    document.getElementById('vehicles-detected').innerText = data.vehicles_detected;
+                    document.getElementById('pedestrians-detected').innerText = data.pedestrians_detected;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        setInterval(fetchStats, 1000);
+    </script>
+</head>
+<body>
+    <header>
+        <h1>👁️‍🗨️🛡️ VISION GUARD 🛡️👁️‍🗨️</h1> 
+        <h1>🚦 Real-Time Pedestrian & Vehicle Detection 🚦</h1>
+    </header>
+    <main>
+        <br>
+        <form action="/upload_video_feed" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="video/*">
+            <input type="submit" value="Upload Video">
+        </form>
+        <form action="/upload_photo" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*">
+            <input type="submit" value="Upload Photo">
+        </form>
+        <h3 id="camera-status">Camera turned off</h3>
+        <button onclick="toggleCamera()"><i class="fas fa-video"></i> Toggle Camera</button>
+        <div id="camera-feed" style="width:640px; height:480px; display:flex; align-items:center; justify-content:center; background:#1b356f; border-radius:10px; box-shadow: 0 0 15px #4a90e2;">
+  <svg width="150" height="150" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="18" width="52" height="28" rx="6" ry="6" fill="url(#paint0_linear)" stroke="#4a90e2" stroke-width="3" filter="url(#glow)"/>
+    <circle cx="32" cy="32" r="10" fill="url(#paint1_radial)" stroke="#8ab4f8" stroke-width="2" filter="url(#glow)"/>
+    <circle cx="32" cy="32" r="5" fill="#b3d1ff"/>
+    <defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB" >
+        <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#4a90e2" flood-opacity="0.7"/>
+      </filter>
+      <linearGradient id="paint0_linear" x1="6" y1="18" x2="58" y2="46" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#5a8fe3"/>
+        <stop offset="1" stop-color="#3b5bbb"/>
+      </linearGradient>
+      <radialGradient id="paint1_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 32) rotate(90) scale(10)">
+        <stop stop-color="#a6c8ff"/>
+        <stop offset="1" stop-color="#2a4e8c"/>
+      </radialGradient>
+    </defs>
+  </svg>
+</div>
+
+        <div class="stats">
+            <div>
+                <span id="total-detections">0</span>
+                Total Detections
+            </div>
+            <div>
+                <span id="vehicles-detected">0</span>
+                Vehicles Detected
+            </div>
+            <div>
+                <span id="pedestrians-detected">0</span>
+                Pedestrians Detected
+            </div>
+        </div>
+    </main>
+    <footer>
+        &copy; 2025 Real-Time Detection System. All Rights Reserved.
+    </footer>
+
+
+</body>
+</html>
